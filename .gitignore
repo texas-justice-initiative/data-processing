@@ -1,3 +1,5 @@
 .ipynb_checkpoints/
 data/
-tmp-working/
+tmp/
+*DS_STORE
+*__pycache__*
