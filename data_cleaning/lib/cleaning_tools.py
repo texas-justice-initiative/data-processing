@@ -44,15 +44,17 @@ def standardize_race_cols(df):
 def validate_gender_cols(df):
     cols = [c for c in df.columns if 'gender' in c.split('_')]
     # Check for errors in officer gender columns (values that are not 'male' nor 'female')
-    error_indices = set()
+    error = False
+    valid_genders = ('M', 'F')
     for col in cols:
-        errors = df[df[col].notnull() & ~df[col].str.upper().isin(('MALE', 'FEMALE'))]
-        for e in errors.index.values:
-            print('Unrecognized gender(s):', ','.join(errors[col].values))
-            error_indices.add(e)
+        errors = df[df[col].notnull() & ~df[col].str.upper().isin(valid_genders)]
+        if len(errors) > 0:
+            print('Unrecognized gender(s):', ','.join(set(errors[col])))
+            print('(Valid genders are: %s)' % ','.join(valid_genders))
+            error = True
 
-    if error_indices:
-        raise CleaningError("Invalid gender values at indices: " + str(list(error_indices)))
+    if error:
+        raise CleaningError("Invalid gender values, see above")
 
 
 def numericalize_age_cols(df):
