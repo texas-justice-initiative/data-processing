@@ -15,7 +15,24 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
     * If you clean a previously `raw_` datafile, the output file of your cleaning script should begin with `clean_`.
 
 ## TJI datasets (and their means of creation)
+
 #### [Updated: 2018-05-12]
+
+### Project: [tji/officer-involved-shootings](https://data.world/tji/officer-involved-shootings/workspace/dataset)
+----
+* **File:** [`shot_civilians.csv`](https://data.world/tji/officer-involved-shootings/workspace/file?filename=shot_civilians.csv)
+* **Description:** Civilians shot by police, late 2015 - present
+* **Generation pipeline:**
+  1. A TJI bot monitors the [Texas Attorney General's website](https://www.texasattorneygeneral.gov/cj/peace-officer-involved-shooting-report) for new OIS reports.
+  1. New reports are emailed to TJI staff.
+  1. (Manual) TJI staff manually parse and enter the data into a master spreadsheet, `OIS.xlsx`, which is synced to data.world [here](https://data.world/tji/officer-involved-shootings/workspace/file?filename=OIS.xlsx.xlsx)
+  1. A member of TJI runs this notebook to create the final file: [`data_cleaning/clean_ois_civilians_shot.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_ois_civilians_shot.ipynb)
+----
+* **File:** [`shot_officers.csv`](https://data.world/tji/officer-involved-shootings/workspace/file?filename=shot_officers.csv)
+* **Description:** Peace officers shot in the line of duty, late 2015 - present
+* **Generation pipeline:**
+  1. Identical to `shot_civilians.csv` above, except that in the last step, a different notebook is run: [`data_cleaning/clean_ois_officers_shot.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_ois_officers_shot.ipynb)
+----
 ### Project: [tji/auxiliary-datasets](https://data.world/tji/auxiliary-datasets/workspace/dataset)
 ----
 * **File:** [`texas_counties.csv`](https://data.world/tji/auxiliary-datasets/workspace/file?filename=texas_counties.csv)
@@ -33,10 +50,10 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 * **File:** [`num_officers_by_agency.csv`](https://data.world/tji/auxiliary-datasets/workspace/file?filename=num_officers_by_agency.csv)
 * **Description:** Number of officers in each Texas police department
 * **Generation pipeline:**
-  1. (Manual) Eva requests data from [TCOLE](https://www.tcole.texas.gov/)
-  1. (Manual) TCOLE sends an excel file, which Eva places in Google Drive (`TCOLE.xlsx`)
-  1. (Manual) Excel file uploaded to data.world as [`raw_num_officers_by_agency.csv`](https://data.world/tji/auxiliary-datasets/workspace/file?filename=raw_num_officers_by_agency.csv)
-  1. Run this notebook: [`data_cleaning/clean_num_officers_by_agency.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_num_officers_by_agency.ipynb)
+  1. (Manual) TJI staff request data from [TCOLE](https://www.tcole.texas.gov/)
+  1. (Manual) TCOLE emails an excel file, which TJI staff place in Google Drive (`TCOLE.xlsx`)
+  1. (Manual) The first/only sheet of the Excel file is uploaded to data.world as [`raw_num_officers_by_agency.csv`](https://data.world/tji/auxiliary-datasets/workspace/file?filename=raw_num_officers_by_agency.csv)
+  1. Run this notebook to generate the final data file: [`data_cleaning/clean_num_officers_by_agency.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_num_officers_by_agency.ipynb)
 ----
 * **File:** [`agencies_and_counties.csv`](https://data.world/tji/auxiliary-datasets/workspace/file?filename=agencies_and_counties.csv)
 * **Description:** List of texas police agencies (names are normalized) and the county they belong to
