@@ -1,6 +1,11 @@
 '''Shared utilities for data cleaning.'''
 
 
+import os
+import tempfile
+
+
+import datadotworld as dw
 import pandas as pd
 
 
@@ -8,22 +13,27 @@ class CleaningError(Exception):
     pass
 
 
+def upcase_cells(df):
+    for c in df.columns:
+        df[c] = df[c].apply(lambda x: x if not isinstance(x, str) else x.upper())
+
+
 WHITE, BLACK, HISPANIC, OTHER = 'WHITE,BLACK,HISPANIC,OTHER'.split(',')
 RACES = [WHITE, BLACK, HISPANIC, OTHER]
-RACE_RENAMES = {
-    'HISPANIC OR LATINO': HISPANIC,
-    'BLACK OR AFRICAN AMERICAN': BLACK,
-    'ANGLO OR WHITE': WHITE,
-    'ANGLO': WHITE,
-    'AO': WHITE,
-    'ASIAN OR PACIFIC ISLANDER': OTHER,
-    'AMERICAN INDIAN OR ALASKA NATIVE': OTHER,
-    'AMERICAN INDIAN OR ALASKAN NATIVE': OTHER,
-}
-def standardize_race(r):
-    if pd.isnull(r):
-        return r
-    return RACE_RENAMES.get(r.upper(), r)
+
+
+def standardize_race(x):
+    x = x.lower()
+    if 'anglo' in x or 'white' in x or 'caucasian' in x or x == 'ao':
+        return WHITE
+    elif 'black' in x or 'african' in x:
+        return BLACK
+    elif (('hispanic' in x or 'latino' in x)
+          and ('non hispanic' not in x)
+          and ('not hispanic' not in x)):
+        return HISPANIC
+    else:
+        return OTHER
 
 
 def standardize_race_cols(df):
@@ -70,3 +80,13 @@ def insert_col_after(df, to_insert, name, after):
     newcols = cols[:(i+1)] + [name] + cols[(i+1):]
     df[name] = to_insert
     return df[newcols]
+
+
+def read_dtw_excel(project_key, filename, sheet_name=None):
+    datasets = dw.load_dataset(project_key, force_update=True)
+    data_bytes = datasets.raw_data[filename]
+    new_file, tmpfilename = tempfile.mkstemp()
+    print('Writing excel file to temp file:', tmpfilename)
+    os.write(new_file, data_bytes)
+    os.close(new_file)
+    return pd.read_excel(tmpfilename, sheet_name=sheet_name)
