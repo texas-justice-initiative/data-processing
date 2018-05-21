@@ -16,7 +16,7 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 ## TJI datasets (and their means of creation)
 
 #### [Updated: 2018-05-21]
-
+----
 ### Project: Deaths in Custody - [tji/tx-deaths-in-custody-2005-2015](https://data.world/tji/tx-deaths-in-custody-2005-2015/workspace/dataset)
 ----
 * **File:** [`cleaned_custodial_death_reports.csv`](https://data.world/tji/tx-deaths-in-custody-2005-2015/workspace/file?filename=cleaned_custodial_death_reports.csv)
@@ -24,7 +24,7 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 * **Generation pipeline:**
   1. (Manual) TJI staff manually parse and enter the data into a master spreadsheet, `CDR Reports All.xlsx`, in Google Drive, which is synced to data.world [here](https://data.world/tji/tx-deaths-in-custody-2005-2015/workspace/file?filename=CDR+Reports+All.xlsx)
   1. A member of TJI runs this notebook to create the final file: [`data_cleaning/clean_cdr.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_cdr.ipynb)
-
+----
 ### Project: Officer Involved Shootings [tji/officer-involved-shootings](https://data.world/tji/officer-involved-shootings/workspace/dataset)
 ----
 * **File:** [`shot_civilians.csv`](https://data.world/tji/officer-involved-shootings/workspace/file?filename=shot_civilians.csv)
