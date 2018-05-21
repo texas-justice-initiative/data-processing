@@ -13,58 +13,59 @@ class CleaningError(Exception):
     pass
 
 
-def upcase_cells(df):
+def upcase_strip_string_cells(df):
     for c in df.columns:
-        df[c] = df[c].apply(lambda x: x if not isinstance(x, str) else x.upper())
+        df[c] = df[c].apply(lambda x: x if not isinstance(x, str) else x.strip().upper())
 
 
 WHITE, BLACK, HISPANIC, OTHER = 'WHITE,BLACK,HISPANIC,OTHER'.split(',')
 RACES = [WHITE, BLACK, HISPANIC, OTHER]
 
 
-def standardize_race(x):
-    x = x.lower()
-    if 'anglo' in x or 'white' in x or 'caucasian' in x or x == 'ao':
+def standardize_race(race):
+    if pd.isnull(race):
+        return race
+    race = race.lower()
+    if 'anglo' in race or 'white' in race or 'caucasian' in race or race == 'ao':
         return WHITE
-    elif 'black' in x or 'african' in x:
+    elif 'black' in race or 'african' in race:
         return BLACK
-    elif (('hispanic' in x or 'latino' in x)
-          and ('non hispanic' not in x)
-          and ('not hispanic' not in x)):
+    elif (('hispanic' in race or 'latino' in race)
+          and ('non hispanic' not in race)
+          and ('not hispanic' not in race)):
         return HISPANIC
     else:
         return OTHER
 
 
 def standardize_race_cols(df):
-    cols = [c for c in df.columns if 'race' in c.split('_')]
-    error_indices = set()
+    cols = [c for c in df.columns if 'race' in c.split('_') or 'ethnicity' in c.split('_')]
     for col in cols:
-        df[col] = df[col].apply(standardize_race).str.upper()
-        errors = df[df[col].notnull() & ~df[col].isin(RACES)]
-        if len(errors):
-            print('Unrecognized race(s):', ','.join(errors[col].values))
-            for e in errors.index.values:
-                error_indices.add(e)
-
-    if error_indices:
-        raise CleaningError("Invalid race values at indices: " + str(list(error_indices)))
+        df[col] = df[col].apply(standardize_race)
 
 
-def validate_gender_cols(df):
-    cols = [c for c in df.columns if 'gender' in c.split('_')]
-    # Check for errors in officer gender columns (values that are not 'male' nor 'female')
-    error = False
-    valid_genders = ('M', 'F')
+MALE = 'M'
+FEMALE = 'F'
+GENDERS = [MALE, FEMALE]
+
+
+def standardize_gender(gender):
+    if pd.isnull(gender):
+        return gender
+    g = gender.lower()
+    if g in ('m', 'male', 'man'):
+        return MALE
+    elif g in ('f', 'female', 'woman'):
+        return FEMALE
+    else:
+        raise CleaningError('Unrecognized gender: "%s"' % gender)
+
+
+
+def standardize_gender_cols(df):
+    cols = [c for c in df.columns if 'gender' in c.split('_') or 'sex' in c.split('_')]
     for col in cols:
-        errors = df[df[col].notnull() & ~df[col].str.upper().isin(valid_genders)]
-        if len(errors) > 0:
-            print('Unrecognized gender(s):', ','.join(set(errors[col])))
-            print('(Valid genders are: %s)' % ','.join(valid_genders))
-            error = True
-
-    if error:
-        raise CleaningError("Invalid gender values, see above")
+        df[col] = df[col].apply(standardize_gender)
 
 
 def numericalize_age_cols(df):
@@ -83,6 +84,7 @@ def insert_col_after(df, to_insert, name, after):
 
 
 def read_dtw_excel(project_key, filename, sheet_name=None):
+    '''Reads a dataframe from a raw Excel file on data.world (circumventing DTW's preprocessing).'''
     datasets = dw.load_dataset(project_key, force_update=True)
     data_bytes = datasets.raw_data[filename]
     new_file, tmpfilename = tempfile.mkstemp()
