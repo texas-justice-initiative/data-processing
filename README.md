@@ -15,7 +15,7 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 
 ## TJI datasets (and their means of creation)
 
-#### [Updated: 2018-05-12]
+#### [Updated: 2018-05-21]
 
 ### Project: Deaths in Custody - [tji/tx-deaths-in-custody-2005-2015](https://data.world/tji/tx-deaths-in-custody-2005-2015/workspace/dataset)
 ----
