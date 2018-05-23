@@ -24,6 +24,9 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 * **Generation pipeline:**
   1. (Manual) TJI staff manually parse and enter the data into a master spreadsheet, `CDR Reports All.xlsx`, in Google Drive, which is synced to data.world [here](https://data.world/tji/tx-deaths-in-custody-2005-2015/workspace/file?filename=CDR+Reports+All.xlsx)
   1. A member of TJI runs this notebook to create the final file: [`data_cleaning/clean_cdr.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_cdr.ipynb)
+* **Quirks**
+  1. There is one record for every _shot civilian_. Thus, if a single incident results in multiple civilians shot, there will be multiple rows with largely duplicate information (e.g. address, date, officer details, etc). Incident-level analysis should de-duplicate, say by matching on date and address.
+  1. It's hard to know exactly how many officers were on scene. In theory, there are two pieces of information in each record that reveal this information. First, there is a checkbox on the form called "multiple officers involved," which is checked about 80% of the time. Second, there are spaces in the form for the details (agency, gender, race, age, etc) of each officer involved. However, when "multiple officers involved" is checked, only ~half the time do details for more than one officer exist. Similarly, sometimes "multiple officers involved" is NOT checked, yet details for multiple officers exist. It's unclear what to make of this information.
 ----
 ### Project: Officer Involved Shootings [tji/officer-involved-shootings](https://data.world/tji/officer-involved-shootings/workspace/dataset)
 ----
