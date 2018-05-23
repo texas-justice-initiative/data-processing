@@ -61,7 +61,6 @@ def standardize_gender(gender):
         raise CleaningError('Unrecognized gender: "%s"' % gender)
 
 
-
 def standardize_gender_cols(df):
     cols = [c for c in df.columns if 'gender' in c.split('_') or 'sex' in c.split('_')]
     for col in cols:
@@ -69,7 +68,6 @@ def standardize_gender_cols(df):
 
 
 def numericalize_age_cols(df):
-    # Double check that all age columns are numerical
     cols = [c for c in df.columns if 'age' in c.split('_')]
     for c in cols:
         df[c] = df[c].astype(float)
