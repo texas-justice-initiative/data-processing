@@ -73,6 +73,16 @@ def numericalize_age_cols(df):
         df[c] = df[c].astype(float)
 
 
+def standardize_name(name):
+    if pd.isnull(name):
+        return None
+    name = str(name)
+    parts = name.split()
+    parts = [''.join(ch for ch in p if ch.isalnum() or ch == '-') for p in parts]
+    name = ' '.join([p for p in parts if p])
+    return name if name else None
+
+
 def insert_col_after(df, to_insert, name, after):
     cols = list(df.columns)
     i = cols.index(after)
@@ -81,12 +91,18 @@ def insert_col_after(df, to_insert, name, after):
     return df[newcols]
 
 
-def read_dtw_excel(project_key, filename, sheet_name=None):
+def read_dtw_excel(project_key, filename, sheet_names=[None]):
     '''Reads a dataframe from a raw Excel file on data.world (circumventing DTW's preprocessing).'''
+    if not isinstance(sheet_names, list):
+        sheet_names = [sheet_names]
     datasets = dw.load_dataset(project_key, force_update=True)
     data_bytes = datasets.raw_data[filename]
     new_file, tmpfilename = tempfile.mkstemp()
     print('Writing excel file to temp file:', tmpfilename)
     os.write(new_file, data_bytes)
     os.close(new_file)
-    return pd.read_excel(tmpfilename, sheet_name=sheet_name)
+    frames = [pd.read_excel(tmpfilename, sheet_name=sheet) for sheet in sheet_names]
+    if len(frames) == 1:
+        return frames[0]
+    else:
+        return frames

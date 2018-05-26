@@ -36,6 +36,9 @@ ABBREVIATIONS = {
     'PRECINCT': 'PCT',
     'CONSTABLE': 'CONST',
     'CONSTABLES': 'CONST',
+    'PD': 'POLICE DEPT',
+    'SO': 'SHERIFFS OFFICE',
+    'SD': 'SHERIFFS OFFICE',
 }
 
 
@@ -56,6 +59,7 @@ MANUAL_RENAMINGS = {
     'TEXAS DEPT OF PUBLIC SAFETY CRIMINAL INVESTIGATIONS DIVISION': 'TEXAS DEPT OF PUBLIC SAFETY',
     'ALAMO COMMUNITY COLLEGE DIST.': 'ALAMO COMMUNITY COLLEGE DIST POLICE DEPT',
     'TDCJ/OFFICE OF THE INSPECTOR GENERAL': 'TEXAS DEPT OF CRIMINAL JUSTICE',
+    'TDCJ': 'TEXAS DEPT OF CRIMINAL JUSTICE',
 }
 
 
@@ -95,6 +99,7 @@ def standardize_agency_name(agency):
     parts = [p for p in parts if p]
     parts = [MISSPELLINGS.get(p, p) for p in parts]
     parts = [ABBREVIATIONS.get(p, p) for p in parts]
+    parts = ' '.join(parts).split()  # In case any abbreviations are expanded to multiple words.
     parts = reorder_parts(parts)
     agency = ' '.join(parts)
     for before, after in MULTIWORD_RENAMINGS.items():
