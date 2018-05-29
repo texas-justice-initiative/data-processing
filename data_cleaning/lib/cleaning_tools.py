@@ -106,3 +106,14 @@ def read_dtw_excel(project_key, filename, sheet_names=[None]):
         return frames[0]
     else:
         return frames
+
+
+def read_dtw_csv(project_key, filename, **kwargs):
+    '''Reads a dataframe from a raw CSV file on data.world (circumventing DTW's preprocessing).'''
+    datasets = dw.load_dataset(project_key, force_update=True)
+    data_bytes = datasets.raw_data[filename]
+    new_file, tmpfilename = tempfile.mkstemp()
+    print('Writing CSV to temp file:', tmpfilename)
+    os.write(new_file, data_bytes)
+    os.close(new_file)
+    return pd.read_csv(tmpfilename, **kwargs)
