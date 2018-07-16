@@ -6,6 +6,7 @@ import tempfile
 
 
 import datadotworld as dw
+import numpy as np
 import pandas as pd
 
 
@@ -70,7 +71,48 @@ def standardize_gender_cols(df):
 def numericalize_age_cols(df):
     cols = [c for c in df.columns if 'age' in c.split('_')]
     for c in cols:
+        print("Numericalizing column %s" % c)
+        bad_values = []
+        new_values = []
+        for value in df[c]:
+            if pd.isnull(value):
+                new_values.append(value)
+            else:
+                try:
+                    newval = float(value)
+                except ValueError:
+                    newval = np.nan
+                    bad_values.append(value)
+                new_values.append(newval)
+        df[c] = new_values
         df[c] = df[c].astype(float)
+        if bad_values:
+            print("Replaced %d bad values with NA:" % len(bad_values))
+            print("Unique bad values:", set(bad_values))
+
+
+def convert_date_cols(df):
+    cols = [c for c in df.columns if 'date' in c.split('_')]
+    cols = [c for c in cols if '_n_a' not in c and 'na' not in c.split('_')]
+    for c in cols:
+        print("Converting column %s to datetime" % c)
+        bad_values = []
+        new_values = []
+        for value in df[c]:
+            if pd.isnull(value):
+                new_values.append(value)
+            else:
+                try:
+                    newval = pd.to_datetime(value)
+                except ValueError:
+                    newval = np.nan
+                    bad_values.append(value)
+                new_values.append(newval)
+        df[c] = new_values
+        df[c] = pd.to_datetime(df[c])
+        if bad_values:
+            print("Replaced %d bad values with NaT:" % len(bad_values))
+            print("Unique bad values:", set(bad_values))
 
 
 def standardize_name(name):
@@ -91,21 +133,20 @@ def insert_col_after(df, to_insert, name, after):
     return df[newcols]
 
 
-def read_dtw_excel(project_key, filename, sheet_names=[None]):
+def read_dtw_excel(project_key, filename):
     '''Reads a dataframe from a raw Excel file on data.world (circumventing DTW's preprocessing).'''
-    if not isinstance(sheet_names, list):
-        sheet_names = [sheet_names]
     datasets = dw.load_dataset(project_key, force_update=True)
     data_bytes = datasets.raw_data[filename]
     new_file, tmpfilename = tempfile.mkstemp()
     print('Writing excel file to temp file:', tmpfilename)
     os.write(new_file, data_bytes)
     os.close(new_file)
-    frames = [pd.read_excel(tmpfilename, sheet_name=sheet) for sheet in sheet_names]
-    if len(frames) == 1:
-        return frames[0]
-    else:
-        return frames
+    xl = pd.ExcelFile(tmpfilename)
+    sheet_names = xl.sheet_names
+    if len(sheet_names) == 1:
+        return xl.parse(sheet_names[0])
+    return dict((name, xl.parse(name)) for name in sheet_names)
+
 
 
 def read_dtw_csv(project_key, filename, **kwargs):
