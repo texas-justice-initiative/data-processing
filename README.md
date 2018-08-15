@@ -1,4 +1,4 @@
-# Texas Justic Initiative - data processing
+# Texas Justice Initiative - data processing
 
 To learn more about TJI, visit our website at www.texasjusticeinitiative.org
 
