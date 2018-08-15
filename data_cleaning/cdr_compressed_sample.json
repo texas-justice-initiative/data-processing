@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "num_columns": 11,
+    "num_records": 5,
+    "lookups": {
+      "year": [
+        2005,
+        2009,
+        2012,
+        2015,
+        2016
+      ],
+      "race": [
+        "BLACK",
+        "WHITE"
+      ],
+      "sex": [
+        "M"
+      ],
+      "manner_of_death": [
+        "HOMICIDE",
+        "NATURAL CAUSES/ILLNESS",
+        "OTHER, SPECIFY",
+        "SUICIDE"
+      ],
+      "age_at_time_of_death": [
+        30.0,
+        47.0,
+        52.0,
+        53.0,
+        62.0
+      ],
+      "type_of_custody": [
+        "JAIL",
+        "POLICE CUSTODY (PRE-BOOKING)",
+        "PRISON"
+      ],
+      "death_location_type": [
+        "CRIME/ARREST SCENE",
+        "LAW ENFORCEMENT FACILITY",
+        "MEDICAL FACILITY"
+      ],
+      "means_of_death": [
+        "FIREARM",
+        "HANGING, STRANGULATION",
+        "NOT APPLICABLE"
+      ],
+      "death_location_county": [
+        "BEXAR",
+        "DENTON",
+        "GALVESTON",
+        "HARRIS",
+        "LIBERTY"
+      ],
+      "agency_name": [
+        "DALLAS POLICE DEPT",
+        "HARRIS CO SHERIFFS OFFICE",
+        "TEXAS DEPT OF CRIMINAL JUSTICE",
+        "UNIVERSAL CITY POLICE DEPT"
+      ]
+    },
+    "record_ids": {
+      "field_name": "record_id",
+      "values": [
+        "PA05094MJ",
+        "16-16-P",
+        "PA15599C",
+        "PA09042P",
+        "PA12053C"
+      ]
+    }
+  },
+  "records": {
+    "year": [
+      0,
+      4,
+      3,
+      1,
+      2
+    ],
+    "race": [
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
+    "sex": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "manner_of_death": [
+      3,
+      1,
+      2,
+      1,
+      0
+    ],
+    "age_at_time_of_death": [
+      1,
+      4,
+      0,
+      3,
+      2
+    ],
+    "type_of_custody": [
+      0,
+      2,
+      1,
+      2,
+      1
+    ],
+    "death_location_type": [
+      1,
+      2,
+      0,
+      1,
+      0
+    ],
+    "means_of_death": [
+      1,
+      2,
+      0,
+      2,
+      0
+    ],
+    "death_location_county": [
+      0,
+      2,
+      3,
+      4,
+      1
+    ],
+    "agency_name": [
+      3,
+      2,
+      1,
+      2,
+      0
+    ]
+  }
+}
