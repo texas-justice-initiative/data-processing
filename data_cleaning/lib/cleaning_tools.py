@@ -24,8 +24,8 @@ RACES = [WHITE, BLACK, HISPANIC, OTHER]
 
 
 def standardize_race(race):
-    if pd.isnull(race):
-        return race
+    if pd.isnull(race) or not race:
+        return None
     race = race.lower()
     if 'anglo' in race or 'white' in race or 'caucasian' in race or race == 'ao':
         return WHITE
@@ -45,19 +45,24 @@ def standardize_race_cols(df):
         df[col] = df[col].apply(standardize_race)
 
 
-MALE = 'M'
-FEMALE = 'F'
+MALE = 'MALE'
+FEMALE = 'FEMALE'
+GENDERS_UNKNOWN = ['u']
 GENDERS = [MALE, FEMALE]
 
 
 def standardize_gender(gender):
     if pd.isnull(gender):
-        return gender
-    g = gender.lower()
-    if g in ('m', 'male', 'man'):
+        return None
+    gender = gender.strip().lower()
+    if not gender:
+        return None
+    if gender in ('m', 'male', 'man'):
         return MALE
-    elif g in ('f', 'female', 'woman'):
+    elif gender in ('f', 'female', 'woman'):
         return FEMALE
+    elif gender in GENDERS_UNKNOWN:
+        return None
     else:
         raise CleaningError('Unrecognized gender: "%s"' % gender)
 
