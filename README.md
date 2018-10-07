@@ -16,7 +16,7 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 ## Overview for developers and data engineers
 
 To regenerate data for the TJI website ([repo](https://github.com/texas-justice-initiative/website)) requires two steps:
-1. Run the data cleaning scripts
+#### 1. Run the data cleaning scripts
   * Run these notebooks to generate the cleaned Officer Involved Shooting (OIS) datasets:
     * data_cleaning/clean_ois_civilians_shot.ipynb
     * data_cleaning/clean_ois_officers_shot.ipynb
@@ -25,7 +25,7 @@ To regenerate data for the TJI website ([repo](https://github.com/texas-justice-
   * Notes:
     * The raw data is manually maintained by Eva in Google Drive and automatically synced to data.world, but this data needs to be cleaned before it is ready for analysis or website use.
     * These notebooks both read from and write to data.world -- see later in this README for details.
-1. Run create_datasets_for_website.ipynb
+#### 2. Run create_datasets_for_website.ipynb
   * This will read the cleaned datasets and generate several output files _on your local machine_:
     * `cdr_compressed.json`
     * `cdr_full.csv`
