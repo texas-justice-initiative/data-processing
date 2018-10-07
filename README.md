@@ -13,7 +13,29 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
   * [data_cleaning/](https://github.com/texas-justice-initiative/data-processing/tree/master/data_cleaning) - files should both be READ FROM and WRITTEN TO the TJI data.world account. Any dataset not on data.world should be scraped or manually added to data.world first.
     * The output of a cleaning script should be a file whose name begins with `clean_`.
 
-## TJI datasets, their means of creation, and data quirks to be aware of
+## Overview for developers and data engineers
+
+To regenerate data for the TJI website ([repo](https://github.com/texas-justice-initiative/website)) requires two steps:
+1. Run the data cleaning scripts
+  * Run these notebooks to generate the cleaned Officer Involved Shooting (OIS) datasets:
+    * data_cleaning/clean_ois_civilians_shot.ipynb
+    * data_cleaning/clean_ois_officers_shot.ipynb
+  * Run this notebook to generate the cleaned Custodial Death Report data:
+    * data_cleaning/clean_cdr.ipynb
+  * Notes:
+    * The raw data is manually maintained by Eva in Google Drive and automatically synced to data.world, but this data needs to be cleaned before it is ready for analysis or website use.
+    * These notebooks both read from and write to data.world -- see later in this README for details.
+1. Run create_datasets_for_website.ipynb
+  * This will read the cleaned datasets and generate several output files _on your local machine_:
+    * `cdr_compressed.json`
+    * `cdr_full.csv`
+    * `shot_civilians_compressed.json`
+    * `shot_civilians_full.csv`
+    * `shot_officers_compressed.json`
+    * `shot_officers_full.csv`
+  * Moves these files into the [data/](https://github.com/texas-justice-initiative/website/tree/master/data) folder of _website_ repo, and create a PR.
+
+## TJI dataset details, means of creation, and data quirks to be aware of
 
 #### [Updated: 2018-05-21]
 ----
