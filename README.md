@@ -37,7 +37,7 @@ All scripts/notebooks to clean, scrape, merge or otherwise process data files. T
 * **Generation pipeline:**
   1. A TJI bot monitors the [Texas Attorney General's website](https://www.texasattorneygeneral.gov/cj/peace-officer-involved-shooting-report) for new OIS reports.
   1. New reports are emailed to TJI staff.
-  1. TJI staff manually parse and enter the data into a master spreadsheet, `OIS.xlsx`, in Google Drive, which is synced to data.world [here](https://data.world/tji/officer-involved-shootings/workspace/file?filename=OIS.xlsx.xlsx)
+  1. TJI staff manually parse and enter the data into a master spreadsheet, `OIS.xlsx`, in Google Drive, which is synced to data.world [here](https://data.world/tji/officer-involved-shootings/workspace/file?filename=OIS.xlsx)
   1. A member of TJI runs this notebook to create the final file: [`data_cleaning/clean_ois_civilians_shot.ipynb`](https://github.com/texas-justice-initiative/data-processing/blob/master/data_cleaning/clean_ois_civilians_shot.ipynb)
 * **Quirks**
   1. There is one record for every _shot civilian_. Thus, if a single incident results in multiple civilians shot, there will be multiple rows with largely duplicate information (e.g. address, date, officer details, etc). Incident-level analysis should de-duplicate, say by matching on date and address.
