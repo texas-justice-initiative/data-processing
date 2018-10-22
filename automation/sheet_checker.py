@@ -9,6 +9,7 @@ import dateutil.parser
 
 from datetime import datetime
 from cStringIO import StringIO
+from botocore.exceptions import ClientError
 from IPython.nbformat.current import read, write
 from runipy.notebook_runner import NotebookRunner
 
@@ -34,8 +35,7 @@ class SheetChecker(object):
                 self.logger.exception(e)
                 self.logger.warning('Cleaning failed.')
                 sys.exit('Exiting: encountered an issue while cleaning.')
-            try: 
-                # TODO: Set any environment variables needed for compression nb
+            try:
                 self.run_compression_notebook()
             except Exception as e:
                 self.logger.exception(e)
@@ -53,18 +53,18 @@ class SheetChecker(object):
         runner = NotebookRunner(notebook)
         try:
             runner.run_notebook(skip_exceptions=False, progress_callback=self.print_progress)
-        except Exception as e:
+        except Exception:
             raise
         finally:
             write(runner.nb, open("cleaning_result.ipynb", 'w'), 'json')
         self.logger.info("Successfully cleaned.")
 
-    def run_compression_notebook():
+    def run_compression_notebook(self):
         notebook = read(open('../data_cleaning/create_datasets_for_website.ipynb'), 'json')
         runner = NotebookRunner(notebook)
         try:
             runner.run_notebook(skip_exceptions=False, progress_callback=self.print_progress)
-        except Exception as e:
+        except Exception:
             raise
         self.logger.info("Successfully compressed.")
         return True
@@ -92,7 +92,7 @@ class SheetChecker(object):
         return last_updated_ts
 
     def update_last_ran_ts(self):
-        timestamp = datetime.datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         buffer = StringIO()
         buffer.write(timestamp)
         buffer.seek(0)
@@ -106,19 +106,19 @@ class SheetChecker(object):
             body = timestamp['Body']
             last_run_ts = body.read()
             return last_run_ts
-        except botocore.exceptions.ClientError as e:
+        except ClientError as e:
             if e.response['Error']['Code'] == "404":
-                self.logger("No timestamp found.")
+                self.logger.info("No timestamp found.")
             else:
                 self.logger.exception(e)
-                self.logger("Something went wrong while fetching timestamp.")
+                self.logger.info("Something went wrong while fetching timestamp.")
 
     def set_up_environment(self):
         # Assume for now we want to clean and compress. 
         # Make more configurable 
         dataset = self.dataset.upper()
-        os.environ['CLEAN_%s_S3' % dataset] == 'TRUE'
-        os.environ['COMPRESS_%s_S3' % dataset] == 'TRUE'
+        os.environ['CLEAN_%s_S3' % dataset] = 'TRUE'
+        os.environ['COMPRESS_%s_S3' % dataset] = 'TRUE'
 
 
 class CDRChecker(SheetChecker):
@@ -127,7 +127,7 @@ class CDRChecker(SheetChecker):
 
 class OISChecker(SheetChecker):
     def __init__(self, *args, **kwargs):
-        super(CDRChecker, self).__init__(*args, **kwargs)                   
+        super(OISChecker, self).__init__(*args, **kwargs)
 
 
 if __name__ == '__main__':
