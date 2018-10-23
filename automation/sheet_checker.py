@@ -3,15 +3,15 @@ import sys
 import pytz
 import boto3
 import logging
-import botocore
+import nbformat
 import pygsheets
 import dateutil.parser
 
+from io import StringIO, BytesIO
 from datetime import datetime
-from cStringIO import StringIO
 from botocore.exceptions import ClientError
-from IPython.nbformat.current import read, write
-from runipy.notebook_runner import NotebookRunner
+from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+
 
 class SheetChecker(object):
     def __init__(self, dataset, sheet_name, cleaning_nbs):
@@ -21,7 +21,7 @@ class SheetChecker(object):
         self.cleaning_nbs = cleaning_nbs
         self.logger = logging.getLogger(__name__)
         timestamp = datetime.now().strftime('%Y-%m-%d')
-        logging.basicConfig(filename='%s+%s.log' % (self.dataset, timestamp), level=logging.DEBUG)
+        logging.basicConfig(filename='%s+%s.log' % (self.dataset, timestamp), level=logging.INFO)
 
 
     def run(self):
@@ -49,25 +49,31 @@ class SheetChecker(object):
             
 
     def run_cleaning_notebook(self, cleaning_nb_name):
-        notebook = read(open('../data_cleaning/%s' % cleaning_nb_name), 'json')
-        runner = NotebookRunner(notebook)
-        try:
-            runner.run_notebook(skip_exceptions=False, progress_callback=self.print_progress)
-        except Exception:
-            raise
-        finally:
-            write(runner.nb, open("cleaning_result.ipynb", 'w'), 'json')
+        out_notebook_name = 'cleaning_%s_result_nb.ipynb' % self.dataset
+        nb = nbformat.read('../data_cleaning/%s' % cleaning_nb_name, as_version=4)
+        ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
+        self.run_notebook(ep, nb, out_notebook_name)
         self.logger.info("Successfully cleaned.")
 
     def run_compression_notebook(self):
-        notebook = read(open('../data_cleaning/create_datasets_for_website.ipynb'), 'json')
-        runner = NotebookRunner(notebook)
-        try:
-            runner.run_notebook(skip_exceptions=False, progress_callback=self.print_progress)
-        except Exception:
-            raise
+        out_notebook_name = 'compression_%s_result_nb.ipynb' % self.dataset
+        nb = nbformat.read('../data_cleaning/create_datasets_for_website.ipynb', as_version=4)
+        ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
+        self.run_notebook(ep, nb, out_notebook_name)
         self.logger.info("Successfully compressed.")
         return True
+
+    def run_notebook(self, ep, nb, out_notebook_name):
+        try:
+            ep.preprocess(nb, {'metadata': {'path': '../data_cleaning/'}})
+        except CellExecutionError:
+            msg = 'Error executing the notebook'
+            msg += 'See notebook "%s" for the traceback.' % out_notebook_name
+            self.logger.info(msg)
+            raise
+        finally:
+            with open(out_notebook_name, mode='wt') as f:
+                nbformat.write(nb, f)
 
 
     def print_progress(self, cell_idx):
@@ -92,11 +98,11 @@ class SheetChecker(object):
         return last_updated_ts
 
     def update_last_ran_ts(self):
-        timestamp = datetime.datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-        buffer = StringIO()
-        buffer.write(timestamp)
-        buffer.seek(0)
-        self.s3_client.put_object(buffer, Bucket='tji-timestamps', Key=self.dataset)
+        timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+        buff = BytesIO()
+        buff.write(timestamp.encode('utf-8'))
+        buff.seek(0)
+        self.s3_client.put_object(Body=buff, Bucket='tji-timestamps', Key=self.dataset)
         self.logger.info("Updated %s timestamp." % self.dataset)
 
     
@@ -119,6 +125,7 @@ class SheetChecker(object):
         dataset = self.dataset.upper()
         os.environ['CLEAN_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_%s_S3' % dataset] = 'TRUE'
+        os.environ['COMPRESS_DATASET'] = dataset
 
 
 class CDRChecker(SheetChecker):
@@ -133,6 +140,6 @@ class OISChecker(SheetChecker):
 if __name__ == '__main__':
     cdr = CDRChecker(dataset='cdr', sheet_name='CDR-Testing', cleaning_nbs=['clean_cdr.ipynb'])
     cdr.run()
-    # ois = OISChecker(dataset='ois', sheet_name'OIS-Testing',
-    #   cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shots.ipynb'])
-    # ois.run()
+    ois = OISChecker(dataset='ois', sheet_name='OIS-Testing',
+      cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
+    ois.run()
