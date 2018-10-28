@@ -6,6 +6,7 @@ import logging
 import nbformat
 import pygsheets
 import dateutil.parser
+import tji_emailer as emailer
 
 from io import StringIO, BytesIO
 from datetime import datetime
@@ -23,7 +24,6 @@ class SheetChecker(object):
         timestamp = datetime.now().strftime('%Y-%m-%d')
         logging.basicConfig(filename='%s+%s.log' % (self.dataset, timestamp), level=logging.INFO)
 
-
     def run(self):
         if self.is_sheet_updated():
             self.logger.info("Sheet has been updated since last run. Cleaning and compressing...")
@@ -31,22 +31,25 @@ class SheetChecker(object):
             try:
                 for cleaning_nb in self.cleaning_nbs:
                     self.run_cleaning_notebook(cleaning_nb)
+                emailer.send_success_email("Cleaning", self.dataset)
             except Exception as e:
                 self.logger.exception(e)
+                emailer.send_fail_email("Cleaning", self.dataset)
                 self.logger.warning('Cleaning failed.')
                 sys.exit('Exiting: encountered an issue while cleaning.')
             try:
                 self.run_compression_notebook()
+                emailer.send_success_email("Compressing", self.dataset)
             except Exception as e:
                 self.logger.exception(e)
                 self.logger.warning('Compressing failed.')
+                emailer.send_fail_email("Compressing", self.dataset)
                 sys.exit('Exiting: encountered an issue while compressing.')
             self.logger.info("Successfully cleaned and compressed data.")
             self.update_last_ran_ts()
         else:
             self.logger.info("Sheet has not been updated since last run. Exiting.")
             self.update_last_ran_ts()
-            
 
     def run_cleaning_notebook(self, cleaning_nb_name):
         out_notebook_name = 'cleaning_%s_result_nb.ipynb' % self.dataset
@@ -105,7 +108,6 @@ class SheetChecker(object):
         self.s3_client.put_object(Body=buff, Bucket='tji-timestamps', Key=self.dataset)
         self.logger.info("Updated %s timestamp." % self.dataset)
 
-    
     def fetch_last_run_ts(self):
         try:
             timestamp = self.s3_client.get_object(Bucket='tji-timestamps', Key=self.dataset)
@@ -120,8 +122,7 @@ class SheetChecker(object):
                 self.logger.info("Something went wrong while fetching timestamp.")
 
     def set_up_environment(self):
-        # Assume for now we want to clean and compress. 
-        # Make more configurable 
+        # TODO: Perhaps take these as command line args
         dataset = self.dataset.upper()
         os.environ['CLEAN_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_%s_S3' % dataset] = 'TRUE'
