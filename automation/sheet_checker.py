@@ -3,6 +3,7 @@ import sys
 import pytz
 import boto3
 import logging
+import argparse
 import nbformat
 import pygsheets
 import dateutil.parser
@@ -24,32 +25,39 @@ class SheetChecker(object):
         timestamp = datetime.now().strftime('%Y-%m-%d')
         logging.basicConfig(filename='%s+%s.log' % (self.dataset, timestamp), level=logging.INFO)
 
-    def run(self):
-        if self.is_sheet_updated():
+    def run(self, force_full_update=False):
+        if self.is_sheet_updated() or force_full_update:
             self.logger.info("Sheet has been updated since last run. Cleaning and compressing...")
             self.set_up_environment()
-            try:
-                for cleaning_nb in self.cleaning_nbs:
-                    self.run_cleaning_notebook(cleaning_nb)
-                emailer.send_success_email("Cleaning", self.dataset)
-            except Exception as e:
-                self.logger.exception(e)
-                emailer.send_fail_email("Cleaning", self.dataset)
-                self.logger.warning('Cleaning failed.')
-                sys.exit('Exiting: encountered an issue while cleaning.')
-            try:
-                self.run_compression_notebook()
-                emailer.send_success_email("Compressing", self.dataset)
-            except Exception as e:
-                self.logger.exception(e)
-                self.logger.warning('Compressing failed.')
-                emailer.send_fail_email("Compressing", self.dataset)
-                sys.exit('Exiting: encountered an issue while compressing.')
-            self.logger.info("Successfully cleaned and compressed data.")
+            self.clean()
+            self.compress()
             self.update_last_ran_ts()
+            self.clean_up_environment()
         else:
             self.logger.info("Sheet has not been updated since last run. Exiting.")
             self.update_last_ran_ts()
+
+    def clean(self):
+        try:
+            for cleaning_nb in self.cleaning_nbs:
+                self.run_cleaning_notebook(cleaning_nb)
+            emailer.send_success_email("Cleaning", self.dataset)
+        except Exception as e:
+            self.logger.exception(e)
+            emailer.send_fail_email("Cleaning", self.dataset)
+            self.logger.warning('Cleaning failed.')
+            sys.exit('Exiting: encountered an issue while cleaning.')
+
+    def compress(self):
+        try:
+            self.run_compression_notebook()
+            emailer.send_success_email("Compressing", self.dataset)
+        except Exception as e:
+            self.logger.exception(e)
+            self.logger.warning('Compressing failed.')
+            emailer.send_fail_email("Compressing", self.dataset)
+            sys.exit('Exiting: encountered an issue while compressing.')
+        self.logger.info("Successfully cleaned and compressed data.")
 
     def run_cleaning_notebook(self, cleaning_nb_name):
         out_notebook_name = 'cleaning_%s_result_nb.ipynb' % self.dataset
@@ -122,12 +130,16 @@ class SheetChecker(object):
                 self.logger.info("Something went wrong while fetching timestamp.")
 
     def set_up_environment(self):
-        # TODO: Perhaps take these as command line args
-        dataset = self.dataset.upper()
+        dataset = self.dataset.lower()
         os.environ['CLEAN_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_DATASET'] = dataset
 
+    def clean_up_environment(self):
+        dataset = self.dataset.upper()
+        os.unsetenv('CLEAN_%s_S3' % dataset)
+        os.unsetenv('COMPRESS_%s_S3' % dataset)
+        os.unsetenv('COMPRESS_DATASET')
 
 class CDRChecker(SheetChecker):
     def __init__(self, *args, **kwargs):
@@ -139,8 +151,14 @@ class OISChecker(SheetChecker):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check gsheet for changes and re-clean and re-compress.')
+    parser.add_argument('-f', '--force', help='Force everything to re-clean and re-compress')
+    args = parser.parse_args()
+    force = False
+    if args.force:
+        force = True
     cdr = CDRChecker(dataset='cdr', sheet_name='CDR-Testing', cleaning_nbs=['clean_cdr.ipynb'])
-    cdr.run()
+    cdr.run(force_full_update=force)
     ois = OISChecker(dataset='ois', sheet_name='OIS-Testing',
-      cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
-    ois.run()
+                     cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
+    ois.run(force_full_update=force)
