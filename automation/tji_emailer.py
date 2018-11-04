@@ -7,8 +7,7 @@ SENDER = "Aiden Yang <aiden.yang@texasjusticeinitiative.org>"
 
 # Replace recipient@example.com with a "To" address. If your account
 # is still in the sandbox, this address must be verified.
-RECIPIENTS = ["aiden.yang@texasjusticeinitiative.org",
-                "eva.ruth@texasjusticeinitiative.org"]
+RECIPIENTS = ["aiden.yang@texasjusticeinitiative.org"]
 
 # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
 AWS_REGION = "us-east-1"
@@ -26,19 +25,19 @@ def send_success_email(action, dataset):
         <head></head>
         <body>
           <h1>{0} {1} dataset SUCCESS</h1>
-          <p>{0} {1} was cleaned successfully</p>
+          <p>{0} {1} completed successfully</p>
         </body>
         </html> """.format(action.capitalize(), dataset)
     send_email(subject, success_html)
 
 
-def send_fail_clean_email(action, dataset):
+def send_fail_email(action, dataset):
     subject = "{0} {1} FAIL".format(action.capitalize(), dataset)
     failed_html = """<html>
             <head></head>
             <body>
-              <h1>{0} {} dataset FAILED</h1>
-              <p>s dataset cleaning failed</p>
+              <h1>{0} {1} dataset FAILED</h1>
+              <p>{0} {1} failed</p>
             </body>
             </html> """ .format(action.capitalize(), dataset)
     send_email(subject, failed_html)
@@ -48,9 +47,7 @@ def send_email(subject, body):
     try:
         response = client.send_email(
             Destination={
-                'ToAddresses': [
-                    RECIPIENT,
-                ],
+                'ToAddresses': RECIPIENTS,
             },
             Message={
                 'Body': {

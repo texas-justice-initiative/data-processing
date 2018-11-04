@@ -87,10 +87,6 @@ class SheetChecker(object):
                 nbformat.write(nb, f)
 
 
-    def print_progress(self, cell_idx):
-        self.logger.debug(cell_idx)
-
-
     def is_sheet_updated(self):
         sheet_last_updated_ts = dateutil.parser.parse(self.get_sheet_update_ts())
         last_run_ts = self.fetch_last_run_ts()
@@ -130,7 +126,7 @@ class SheetChecker(object):
                 self.logger.info("Something went wrong while fetching timestamp.")
 
     def set_up_environment(self):
-        dataset = self.dataset.lower()
+        dataset = self.dataset.upper()
         os.environ['CLEAN_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_DATASET'] = dataset
@@ -152,13 +148,17 @@ class OISChecker(SheetChecker):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check gsheet for changes and re-clean and re-compress.')
-    parser.add_argument('-f', '--force', help='Force everything to re-clean and re-compress')
+    parser.add_argument('-f', '--force', action='store_true', help='Force everything to re-clean and re-compress')
+    parser.add_argument('-cdr', action='store_true', help='Enable CDR')
+    parser.add_argument('-ois', action='store_true', help='Enable OIS')
     args = parser.parse_args()
     force = False
     if args.force:
         force = True
-    cdr = CDRChecker(dataset='cdr', sheet_name='CDR-Testing', cleaning_nbs=['clean_cdr.ipynb'])
-    cdr.run(force_full_update=force)
-    ois = OISChecker(dataset='ois', sheet_name='OIS-Testing',
-                     cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
-    ois.run(force_full_update=force)
+    if args.cdr:
+        cdr = CDRChecker(dataset='cdr', sheet_name='CDR-Testing', cleaning_nbs=['clean_cdr.ipynb'])
+        cdr.run(force_full_update=force)
+    if args.ois:
+        ois = OISChecker(dataset='ois', sheet_name='OIS-Testing',
+                         cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
+        ois.run(force_full_update=force)
