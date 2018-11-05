@@ -16,10 +16,10 @@ from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
 
 class SheetChecker(object):
-    def __init__(self, dataset, sheet_name, cleaning_nbs):
+    def __init__(self, dataset, sheet_key, cleaning_nbs):
         self.s3_client = boto3.client('s3')
         self.dataset = dataset
-        self.sheet_name = sheet_name
+        self.sheet_key = sheet_key
         self.cleaning_nbs = cleaning_nbs
         self.logger = logging.getLogger(__name__)
         timestamp = datetime.now().strftime('%Y-%m-%d')
@@ -100,7 +100,8 @@ class SheetChecker(object):
 
     def get_sheet_update_ts(self):
         gc = pygsheets.authorize(service_file='client_secret.json')
-        sheet = gc.open(self.sheet_name)
+        gc.enableTeamDriveSupport = True 
+        sheet = gc.open_by_key(self.sheet_key)
         last_updated_ts = sheet.updated
         return last_updated_ts
 
@@ -145,20 +146,20 @@ class OISChecker(SheetChecker):
     def __init__(self, *args, **kwargs):
         super(OISChecker, self).__init__(*args, **kwargs)
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check gsheet for changes and re-clean and re-compress.')
-    parser.add_argument('-f', '--force', action='store_true', help='Force everything to re-clean and re-compress')
+    parser.add_argument('-force', action='store_true', help='Force everything to re-clean and re-compress')
     parser.add_argument('-cdr', action='store_true', help='Enable CDR')
     parser.add_argument('-ois', action='store_true', help='Enable OIS')
     args = parser.parse_args()
     force = False
     if args.force:
         force = True
+
     if args.cdr:
-        cdr = CDRChecker(dataset='cdr', sheet_name='CDR-Testing', cleaning_nbs=['clean_cdr.ipynb'])
+        cdr = CDRChecker(dataset='cdr', sheet_key='15othpOTOwB25_ccde4jHK3MaQDAvQyJSXJIVL3eihHg', cleaning_nbs=['clean_cdr.ipynb'])
         cdr.run(force_full_update=force)
     if args.ois:
-        ois = OISChecker(dataset='ois', sheet_name='OIS-Testing',
+        ois = OISChecker(dataset='ois', sheet_key='1mrdGvABFCUYo68TPGWaT22l1e1qkdgVYBal9cs6sdwc',
                          cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
         ois.run(force_full_update=force)
