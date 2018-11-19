@@ -7,10 +7,10 @@ import argparse
 import nbformat
 import pygsheets
 import dateutil.parser
-import tji_emailer as emailer
 
-from io import StringIO, BytesIO
+from io import BytesIO
 from datetime import datetime
+from .tji_emailer import send_email
 from botocore.exceptions import ClientError
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
@@ -21,7 +21,7 @@ class SheetChecker(object):
         self.dataset = dataset
         self.sheet_key = sheet_key
         self.cleaning_nbs = cleaning_nbs
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(dataset)
         timestamp = datetime.now().strftime('%Y-%m-%d')
         logging.basicConfig(filename='%s+%s.log' % (self.dataset, timestamp), level=logging.INFO)
 
@@ -41,21 +41,21 @@ class SheetChecker(object):
         try:
             for cleaning_nb in self.cleaning_nbs:
                 self.run_cleaning_notebook(cleaning_nb)
-            emailer.send_success_email("Cleaning", self.dataset)
+            send_email(is_success=True, action="Cleaning", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
-            emailer.send_fail_email("Cleaning", self.dataset)
-            self.logger.warning('Cleaning failed.')
+            send_email(is_success=False, action="Cleaning", dataset=self.dataset)
+            self.logger.error('Cleaning failed.')
             sys.exit('Exiting: encountered an issue while cleaning.')
 
     def compress(self):
         try:
             self.run_compression_notebook()
-            emailer.send_success_email("Compressing", self.dataset)
+            send_email(is_success=True, action="Compressing", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
-            self.logger.warning('Compressing failed.')
-            emailer.send_fail_email("Compressing", self.dataset)
+            self.logger.error('Compressing failed.')
+            send_email(is_success=False, action="Compressing", dataset=self.dataset)
             sys.exit('Exiting: encountered an issue while compressing.')
         self.logger.info("Successfully cleaned and compressed data.")
 
@@ -66,9 +66,9 @@ class SheetChecker(object):
         self.run_notebook(ep, nb, out_notebook_name)
         self.logger.info("Successfully cleaned.")
 
-    def run_compression_notebook(self):
+    def run_compression_notebook(self, compression_nb_name):
         out_notebook_name = 'compression_%s_result_nb.ipynb' % self.dataset
-        nb = nbformat.read('../data_cleaning/create_datasets_for_website.ipynb', as_version=4)
+        nb = nbformat.read('../data_cleaning/%s' % compression_nb_name, as_version=4)
         ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
         self.run_notebook(ep, nb, out_notebook_name)
         self.logger.info("Successfully compressed.")
@@ -138,13 +138,6 @@ class SheetChecker(object):
         os.unsetenv('COMPRESS_%s_S3' % dataset)
         os.unsetenv('COMPRESS_DATASET')
 
-class CDRChecker(SheetChecker):
-    def __init__(self, *args, **kwargs):
-        super(CDRChecker, self).__init__(*args, **kwargs)
-
-class OISChecker(SheetChecker):
-    def __init__(self, *args, **kwargs):
-        super(OISChecker, self).__init__(*args, **kwargs)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check gsheet for changes and re-clean and re-compress.')
@@ -157,9 +150,8 @@ if __name__ == '__main__':
         force = True
 
     if args.cdr:
-        cdr = CDRChecker(dataset='cdr', sheet_key='15othpOTOwB25_ccde4jHK3MaQDAvQyJSXJIVL3eihHg', cleaning_nbs=['clean_cdr.ipynb'])
+        cdr = CDRChecker()
         cdr.run(force_full_update=force)
     if args.ois:
-        ois = OISChecker(dataset='ois', sheet_key='1mrdGvABFCUYo68TPGWaT22l1e1qkdgVYBal9cs6sdwc',
-                         cleaning_nbs=['clean_ois_civilians_shot.ipynb', 'clean_ois_officers_shot.ipynb'])
+        ois = OISChecker()
         ois.run(force_full_update=force)
