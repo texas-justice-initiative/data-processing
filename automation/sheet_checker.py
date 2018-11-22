@@ -1,6 +1,7 @@
 import os
 import sys
 import pytz
+import yaml
 import boto3
 import logging
 import argparse
@@ -10,14 +11,17 @@ import dateutil.parser
 
 from io import BytesIO
 from datetime import datetime
-from .tji_emailer import send_email
+from .tji_emailer import TJIEmailer
 from botocore.exceptions import ClientError
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
 
 class SheetChecker(object):
-    def __init__(self, dataset, sheet_key, cleaning_nbs):
+    def __init__(self, dataset, emailer, sheet_key, cleaning_nbs, force, sync):
         self.s3_client = boto3.client('s3')
+        self.emailer = emailer
+        self.force_full_update = force
+        self.sync_dw = sync
         self.dataset = dataset
         self.sheet_key = sheet_key
         self.cleaning_nbs = cleaning_nbs
@@ -25,8 +29,8 @@ class SheetChecker(object):
         timestamp = datetime.now().strftime('%Y-%m-%d')
         logging.basicConfig(filename='%s+%s.log' % (self.dataset, timestamp), level=logging.INFO)
 
-    def run(self, force_full_update=False):
-        if self.is_sheet_updated() or force_full_update:
+    def run(self):
+        if self.is_sheet_updated() or self.force_full_update:
             self.logger.info("Sheet has been updated since last run. Cleaning and compressing...")
             self.set_up_environment()
             self.clean()
@@ -41,21 +45,21 @@ class SheetChecker(object):
         try:
             for cleaning_nb in self.cleaning_nbs:
                 self.run_cleaning_notebook(cleaning_nb)
-            send_email(is_success=True, action="Cleaning", dataset=self.dataset)
+            self.emailer.send_email(is_success=True, action="Cleaning", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
-            send_email(is_success=False, action="Cleaning", dataset=self.dataset)
+            self.emailer.send_email(is_success=False, action="Cleaning", dataset=self.dataset)
             self.logger.error('Cleaning failed.')
             sys.exit('Exiting: encountered an issue while cleaning.')
 
     def compress(self):
         try:
             self.run_compression_notebook()
-            send_email(is_success=True, action="Compressing", dataset=self.dataset)
+            self.emailer.send_email(is_success=True, action="Compressing", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
             self.logger.error('Compressing failed.')
-            send_email(is_success=False, action="Compressing", dataset=self.dataset)
+            self.emailer.send_email(is_success=False, action="Compressing", dataset=self.dataset)
             sys.exit('Exiting: encountered an issue while compressing.')
         self.logger.info("Successfully cleaned and compressed data.")
 
@@ -86,7 +90,6 @@ class SheetChecker(object):
             with open(out_notebook_name, mode='wt') as f:
                 nbformat.write(nb, f)
 
-
     def is_sheet_updated(self):
         sheet_last_updated_ts = dateutil.parser.parse(self.get_sheet_update_ts())
         last_run_ts = self.fetch_last_run_ts()
@@ -97,10 +100,9 @@ class SheetChecker(object):
             job_last_run_ts = job_last_run_ts.replace(tzinfo=pytz.UTC)
             return sheet_last_updated_ts >= job_last_run_ts
 
-
     def get_sheet_update_ts(self):
         gc = pygsheets.authorize(service_file='client_secret.json')
-        gc.enableTeamDriveSupport = True 
+        gc.enableTeamDriveSupport = True
         sheet = gc.open_by_key(self.sheet_key)
         last_updated_ts = sheet.updated
         return last_updated_ts
@@ -128,30 +130,38 @@ class SheetChecker(object):
 
     def set_up_environment(self):
         dataset = self.dataset.upper()
+        if self.sync_dw:
+            os.environ['CLEAN_%s_DW' % dataset] = 'TRUE'
         os.environ['CLEAN_%s_S3' % dataset] = 'TRUE'
         os.environ['COMPRESS_%s_S3' % dataset] = 'TRUE'
-        os.environ['COMPRESS_DATASET'] = dataset
 
     def clean_up_environment(self):
         dataset = self.dataset.upper()
+        os.unsetenv('CLEAN_%s_DW' % dataset)
         os.unsetenv('CLEAN_%s_S3' % dataset)
         os.unsetenv('COMPRESS_%s_S3' % dataset)
-        os.unsetenv('COMPRESS_DATASET')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check gsheet for changes and re-clean and re-compress.')
     parser.add_argument('-force', action='store_true', help='Force everything to re-clean and re-compress')
-    parser.add_argument('-cdr', action='store_true', help='Enable CDR')
-    parser.add_argument('-ois', action='store_true', help='Enable OIS')
+    parser.add_argument('-sync', action='store_true', help='Sync to data.world')
     args = parser.parse_args()
-    force = False
-    if args.force:
-        force = True
+    # Parse config.yaml
+    with open('config.yaml') as f:
+        config = yaml.load(f)
 
-    if args.cdr:
-        cdr = CDRChecker()
-        cdr.run(force_full_update=force)
-    if args.ois:
-        ois = OISChecker()
-        ois.run(force_full_update=force)
+    # Set up emailer obj
+    email_config = config['Email Settings']
+    emailer = TJIEmailer(sender=email_config['sender'],
+                             recipients=email_config['recipients'],
+                             aws_region=email_config['region'])
+
+    for dataset, settings in config['Datasets'].iteritems():
+        sc = SheetChecker(dataset=dataset,
+                          emailer=emailer,
+                          sheet_key=settings['sheet_key'],
+                          cleaning_nbs=settings['cleaning_notebooks'],
+                          force=args.force,
+                          sync=args.sync)
+        sc.run()
