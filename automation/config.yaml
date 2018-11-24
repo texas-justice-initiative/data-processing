@@ -10,7 +10,7 @@ Datasets:
     enabled: true
     cleaning notebooks:
       - clean_ois_civilians_shot.ipynb
-      - clean_ois_officers_shot.ipynb
+      - clean_ois_Dofficers_shot.ipynb
     compression notebooks:
       - create_datasets_for_website.ipynb
     sheet key: 1mrdGvABFCUYo68TPGWaT22l1e1qkdgVYBal9cs6sdwc

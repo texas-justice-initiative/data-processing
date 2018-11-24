@@ -22,7 +22,9 @@ class SheetChecker(object):
 
     """ Sheet Checker is intended to run as a cronjob. It checks the last update timestamp of a google sheet against
     the cronjob's last run timestamp. If the sheet has been updated since the last run, it runs the cleaning notebooks
-    and compression notebooks, then updates the timestamp. 
+    and compression notebooks, then updates the timestamp.
+
+    Author: Aiden Yang <aiden.yang@texasjusticeinitiative.org>
     """
     
     def __init__(self, dataset, emailer, sheet_key, cleaning_nbs, compression_nbs, force, sync):
