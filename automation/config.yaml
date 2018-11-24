@@ -1,19 +1,19 @@
 Datasets:
   cdr:
     enabled: true
-    cleaning_notebooks:
+    cleaning notebooks:
       - clean_cdr.ipynb
-    compression_notebooks:
+    compression notebooks:
       - create_datasets_for_website.ipynb
-    sheet_key: 15othpOTOwB25_ccde4jHK3MaQDAvQyJSXJIVL3eihHg
+    sheet key: 15othpOTOwB25_ccde4jHK3MaQDAvQyJSXJIVL3eihHg
   ois:
     enabled: true
-    cleaning_notebooks:
+    cleaning notebooks:
       - clean_ois_civilians_shot.ipynb
       - clean_ois_officers_shot.ipynb
-    compression_notebooks:
+    compression notebooks:
       - create_datasets_for_website.ipynb
-    sheet_key: 1mrdGvABFCUYo68TPGWaT22l1e1qkdgVYBal9cs6sdwc
+    sheet key: 1mrdGvABFCUYo68TPGWaT22l1e1qkdgVYBal9cs6sdwc
 
 Email Settings:
   sender:
