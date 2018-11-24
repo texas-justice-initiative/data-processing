@@ -1,3 +1,8 @@
+"""Summary
+
+Attributes:
+    CHARSET (str): Description
+"""
 import boto3
 import logging
 from botocore.exceptions import ClientError
@@ -6,13 +11,31 @@ CHARSET = "UTF-8"
 
 
 class TJIEmailer():
+    # TJIEmailer sends success and failure emails via Amazon SES during cleaning and compressing of a TJI dataset.
+    
     def __init__(self, sender, recipients, aws_region):
+        """Constructor for TJIEmailer object
+        
+        Args:
+            sender (string): Email of sender
+            recipients ([] of strings): List of recipient emails
+            aws_region (string): AWS region associated with SES
+        """
         self.sender = sender
         self.recipients = recipients
         self.logger = logging.getLogger(__name__)
         self.client = boto3.client('ses', region_name=aws_region)
+        timestamp = datetime.now().strftime('%Y-%m-%d')
+        logging.basicConfig(filename='logs/emailer+%s.log' % timestamp, level=logging.INFO)
 
     def send_email(self, is_success, action, dataset):
+        """Composes and sends a single email
+        
+        Args:
+            is_success (boolean): success or failure email
+            action (string): "cleaning" or "compression"
+            dataset (string): Dataset name
+        """
         indicator = "SUCCESS" if is_success else "FAILURE"
         content = "{0} {1} {2}".format(action.capitalize(), dataset, indicator)
         subject = content
