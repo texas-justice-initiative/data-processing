@@ -10,8 +10,6 @@ def is_valid_file(parser, arg):
 
 
 def set_up_logger(name, log_file, level=logging.INFO):
-    """Function setup as many loggers as you want"""
-
     handler = logging.FileHandler(log_file)
 
     logger = logging.getLogger(name)
