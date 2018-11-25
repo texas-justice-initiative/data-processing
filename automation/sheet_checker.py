@@ -8,12 +8,14 @@ import boto3
 import logging
 import argparse
 import nbformat
+import tji_utils
 import pygsheets
 import dateutil.parser
 
+from tji_emailer import TJIEmailer
+
 from io import BytesIO
 from datetime import datetime
-from .tji_emailer import TJIEmailer
 from botocore.exceptions import ClientError
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
@@ -47,9 +49,10 @@ class SheetChecker(object):
         self.sheet_key = sheet_key
         self.cleaning_nbs = cleaning_nbs
         self.compression_nbs = compression_nbs
-        self.logger = logging.getLogger(dataset)
+
         timestamp = datetime.now().strftime('%Y-%m-%d')
-        logging.basicConfig(filename='logs/%s+%s.log' % (self.dataset, timestamp), level=logging.INFO)
+        log_file = 'logs/%s+%s.log' % (self.dataset, timestamp)
+        self.logger = tji_utils.set_up_logger(name=dataset, log_file=log_file)
 
     def run(self):
         if self.is_sheet_updated() or self.force_full_update:
@@ -134,10 +137,10 @@ class SheetChecker(object):
                 nbformat.write(nb, f)
 
     def is_sheet_updated(self):
-        """Summary
+        """Checks if google sheet has been updated since the last time this job ran
         
         Returns:
-            TYPE: Description
+            boolean
         """
         sheet_last_updated_ts = dateutil.parser.parse(self.get_sheet_update_ts())
         last_run_ts = self.fetch_last_run_ts()
@@ -151,7 +154,7 @@ class SheetChecker(object):
     def get_sheet_update_ts(self):
         """
         Returns:
-            last_updated_ts: Last update timestamp of google sheet
+            timestamp: Last update timestamp of google sheet
         """
         gc = pygsheets.authorize(service_file='client_secret.json')
         gc.enableTeamDriveSupport = True
@@ -206,14 +209,16 @@ class SheetChecker(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Check gsheet for changes and re-clean and re-compress.')
-    parser.add_argument('-force', action='store_true', help='Force everything to re-clean and re-compress')
-    parser.add_argument('-sync', action='store_true', help='Sync to data.world')
+    parser = argparse.ArgumentParser(description='Check gsheets for changes and re-clean and re-compress.')
+    parser.add_argument('-config', dest='fd', required=True,
+                        help='File path of config .yaml file', metavar="FILE",
+                        type=lambda x: tji_utils.is_valid_file(parser, x))
+
     args = parser.parse_args()
 
     # Parse config.yaml
-    with open('config.yaml') as f:
-        config = yaml.load(f)
+    config = yaml.load(args.fd)
+    args.fd.close()
 
     # Set up emailer obj
     email_config = config['Email Settings']
@@ -222,13 +227,13 @@ if __name__ == '__main__':
                          aws_region=email_config['region'])
 
     # Create and run sheet checker for one dataset
-    for dataset, settings in config['Datasets'].iteritems():
+    for dataset, settings in config['Datasets'].items():
         if settings['enabled']:
             sc = SheetChecker(dataset=dataset,
                               emailer=emailer,
                               sheet_key=settings['sheet key'],
                               cleaning_nbs=settings['cleaning notebooks'],
-                              compression_nbs=settings['compressions notebooks']
-                              force=args.force,
-                              sync=args.sync)
+                              compression_nbs=settings['compression notebooks'],
+                              force=settings['force'],
+                              sync=settings['sync'])
             sc.run()

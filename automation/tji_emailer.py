@@ -5,7 +5,9 @@ Attributes:
 """
 import boto3
 import logging
-import datetime
+import tji_utils
+
+from datetime import datetime
 from botocore.exceptions import ClientError
 
 CHARSET = "UTF-8"
@@ -24,10 +26,11 @@ class TJIEmailer():
         """
         self.sender = sender
         self.recipients = recipients
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger('em')
         self.client = boto3.client('ses', region_name=aws_region)
         timestamp = datetime.now().strftime('%Y-%m-%d')
-        logging.basicConfig(filename='logs/emailer+%s.log' % timestamp, level=logging.INFO)
+        log_file = 'logs/emailer+%s.log' % timestamp
+        self.logger = tji_utils.set_up_logger(name='emailer', log_file=log_file)
 
     def send_email(self, is_success, action, dataset):
         """Composes and sends a single email
