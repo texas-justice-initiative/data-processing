@@ -109,7 +109,7 @@ class SheetChecker(object):
         """Runs a single compression notebook
         
         Args:
-            compression_nb_name (TYPE): File name of a compression notebook in data_cleaning directory
+            compression_nb_name (string): File name of a compression notebook in data_cleaning directory
         """
         out_notebook_name = 'output_notebooks/compression_%s_result_nb.ipynb' % self.dataset
         nb = nbformat.read('../data_cleaning/%s' % compression_nb_name, as_version=4)

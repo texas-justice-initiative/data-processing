@@ -12,6 +12,8 @@ Provide the dataset name as the top-level key for each dataset you want to check
 
 Nested keys:
 * **enabled**: true/false
+* **force**: true/false, force clean and update even if google sheet has not been updated since last run
+* **sync**: true/false, sync to data.world
 * **cleaning notebooks**: filenames of cleaning notebooks to run
 * **compression notebooks**: filename of compression notebooks to run
 * **sheet key**: the Google Sheet key associated with the sheet you want to check for updates
