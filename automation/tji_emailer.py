@@ -1,8 +1,3 @@
-"""Summary
-
-Attributes:
-    CHARSET (str): Description
-"""
 import boto3
 import logging
 import tji_utils
