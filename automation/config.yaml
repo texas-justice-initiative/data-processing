@@ -1,6 +1,6 @@
 Datasets:
   cdr:
-    enabled: false
+    enabled: true
     force: true
     sync: false
     cleaning notebooks:
