@@ -1,23 +1,21 @@
 """Summary
 """
+import argparse
 import os
 import sys
+from datetime import datetime
+
+import boto3
+import dateutil.parser
+import nbformat
+import pygsheets
 import pytz
 import yaml
-import boto3
-import logging
-import argparse
-import nbformat
-import tji_utils
-import pygsheets
-import dateutil.parser
-
-from tji_emailer import TJIEmailer
-
-from io import BytesIO
-from datetime import datetime
 from botocore.exceptions import ClientError
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+
+import tji_utils
+from tji_emailer import TJIEmailer
 
 
 class SheetChecker(object):
@@ -56,14 +54,15 @@ class SheetChecker(object):
 
     def run(self):
         if self.is_sheet_updated() or self.force_full_update:
-            self.logger.info("Sheet has been updated since last run. Cleaning and compressing...")
+            self.logger.info("Cleaning and compressing...")
             self.set_up_environment()
             self.clean()
             self.compress()
             self.update_last_ran_ts()
             self.clean_up_environment()
         else:
-            self.logger.info("Sheet has not been updated since last run. Exiting.")
+            self.logger.info("Sheet has not been updated since last run."
+                             "Set force=True if you want to clean and compress anyway. Exiting.")
             self.update_last_ran_ts()
 
     def clean(self):
@@ -71,7 +70,7 @@ class SheetChecker(object):
         """
         try:
             for cleaning_nb in self.cleaning_nbs:
-                self.run_cleaning_notebook(cleaning_nb)
+                self.run_notebook(cleaning_nb)
             self.emailer.send_email(is_success=True, action="Cleaning", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
@@ -84,7 +83,7 @@ class SheetChecker(object):
         """
         try:
             for compression_nb in self.compression_nbs:
-                self.run_compression_notebook(compression_nb)
+                self.run_notebook(compression_nb)
             self.emailer.send_email(is_success=True, action="Compressing", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
@@ -93,38 +92,15 @@ class SheetChecker(object):
             sys.exit('Exiting: encountered an issue while compressing.')
         self.logger.info("Successfully cleaned and compressed data.")
 
-    def run_cleaning_notebook(self, cleaning_nb_name):
-        """Runs a single cleaning notebook
-        
-        Args:
-            cleaning_nb_name (string): File name of cleaning notebook in data_cleaning directory
-        """
-        out_notebook_name = 'output_notebooks/cleaning_%s_result_nb.ipynb' % self.dataset
-        nb = nbformat.read('../data_cleaning/%s' % cleaning_nb_name, as_version=4)
-        ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
-        self.run_notebook(ep, nb, out_notebook_name)
-        self.logger.info("Successfully cleaned.")
-
-    def run_compression_notebook(self, compression_nb_name):
-        """Runs a single compression notebook
-        
-        Args:
-            compression_nb_name (string): File name of a compression notebook in data_cleaning directory
-        """
-        out_notebook_name = 'output_notebooks/compression_%s_result_nb.ipynb' % self.dataset
-        nb = nbformat.read('../data_cleaning/%s' % compression_nb_name, as_version=4)
-        ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
-        self.run_notebook(ep, nb, out_notebook_name)
-        self.logger.info("Successfully compressed.")
-
-    def run_notebook(self, ep, nb, out_notebook_name):
+    def run_notebook(self, nb_name):
         """Runs a notebook and write out the output notebook
         
         Args:
-            ep (ExecutePreprocessor): ExecutePreprocessor instance
-            nb (NotebookNode): NotebookNode instance
-            out_notebook_name (string): Where to write output notebook
+            nb_name (string): notebook filename
         """
+        out_notebook_name = 'output_notebooks/%s_result_nb.ipynb' % nb_name
+        nb = nbformat.read('../data_cleaning/%s' % nb_name, as_version=4)
+        ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
         try:
             ep.preprocess(nb, {'metadata': {'path': '../data_cleaning/'}})
         except CellExecutionError:
@@ -166,10 +142,7 @@ class SheetChecker(object):
         """Drops current time as timestamp in s3, to be used next time this job runs
         """
         timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-        buff = BytesIO()
-        buff.write(timestamp.encode('utf-8'))
-        buff.seek(0)
-        self.s3_client.put_object(Body=buff, Bucket='tji-timestamps', Key=self.dataset)
+        self.s3_client.put_object(Body=timestamp, Bucket='tji-timestamps', Key=self.dataset)
         self.logger.info("Updated %s timestamp." % self.dataset)
 
     def fetch_last_run_ts(self):
@@ -208,11 +181,25 @@ class SheetChecker(object):
         os.unsetenv('COMPRESS_%s_S3' % dataset)
 
 
+def is_valid_file(argument_parser, file_name):
+    """
+    Checks if file exists and returns open file object; displays an error message and usage information if it does not.
+    Args:
+        argument_parser (ArgumentParser): instance of ArgumentParser
+        file_name (string): file name
+
+    """
+    if not os.path.exists(file_name):
+        argument_parser.error("The file %s does not exist." % file_name)
+    else:
+        return open(file_name, 'r')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check gsheets for changes and re-clean and re-compress.')
     parser.add_argument('-config', dest='fd', required=True,
                         help='File path of config .yaml file', metavar="FILE",
-                        type=lambda x: tji_utils.is_valid_file(parser, x))
+                        type=lambda x: is_valid_file(parser, x))
 
     args = parser.parse_args()
 

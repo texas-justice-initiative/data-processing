@@ -5,7 +5,7 @@ The Sheet Checker `sheet_checker.py` is intended to live on an AWS EC2 instance 
 This directory also contains a helper file, `tji_emailer.py` which houses methods related to sending emails.
 
 ## Configuration
-Pass a configuration .yaml file with `-config`. Take a look at `config.yaml` in this repo as an example.
+Pass a configuration .yaml file with `-config`. Take a look at `config-sample.yaml` in this repo as an example.
 
 #### Configuring Datasets
 Provide the dataset name as the top-level key for each dataset you want to check for updates.
