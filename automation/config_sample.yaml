@@ -1,0 +1,27 @@
+Datasets:
+  cdr:
+    enabled: false
+    force: true
+    sync: false
+    cleaning notebooks:
+      - clean_cdr.ipynb
+    compression notebooks:
+      - create_datasets_for_website.ipynb
+    sheet key: <KEY>
+  ois:
+    enabled: true
+    force: true
+    sync: false
+    cleaning notebooks:
+      - clean_ois_civilians_shot.ipynb
+      - clean_ois_officers_shot.ipynb
+    compression notebooks:
+      - create_datasets_for_website.ipynb
+    sheet key: <KEY>
+
+Email Settings:
+  sender: aiden.yang@texasjusticeinitiative.org
+  recipients:
+    - aiden.yang@texasjusticeinitiative.org
+    - eva.ruth@texasjusticeinitiative.org
+  region: us-east-1
