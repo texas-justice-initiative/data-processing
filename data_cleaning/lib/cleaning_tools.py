@@ -167,10 +167,14 @@ def read_dtw_csv(project_key, filename, **kwargs):
 
 def reorder_columns_and_check(df, new_order):
     '''Return dataframe with reordered columns, making sure we didn't leave any columns out.'''
-    assert len(new_order) == len(set(new_order)), "Duplicate columns in new_order! Plz fix."
-    assert len(df.columns) == len(set(df.columns)), "Duplicate columns in original dataframe! Plz fix."
+    if len(new_order) != len(set(new_order)):
+        raise CleaningError("Duplicate columns in new_order! Plz fix.")
+    if len(df.columns) != len(set(df.columns)):
+        raise CleaningError("Duplicate columns in original dataframe! Plz fix.")
 
+    # Make sure we are only reordering columns, not dropping any
     if set(new_order) != set(df.columns):
+        # At least one column exists in the old but not the new order, or vice versa.
         old_cols = list(df.columns)
         messages = []
         for c in old_cols:
@@ -179,6 +183,6 @@ def reorder_columns_and_check(df, new_order):
         for c in new_order:
             if c not in old_cols:
                 messages.append("Column '%s' in new_order does not exist in the original dataframe" % c)
-        assert False, '\n'.join(messages)
+        raise CleaningError('\n'.join(messages))
 
     return df[new_order]
