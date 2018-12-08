@@ -34,6 +34,11 @@ To regenerate data for the TJI website ([repo](https://github.com/texas-justice-
     * `shot_officers_compressed.json`
     * `shot_officers_full.csv`
   * Moves these files into the [data/](https://github.com/texas-justice-initiative/website/tree/master/data) folder of _website_ repo, and create a PR.
+  
+## Automation
+
+Data cleaning and compression for OIS and CDR data are currently automated via a daily cronjob. See the [automation documentation](automation/README.md) for details.
+
 
 ## TJI dataset details, means of creation, and data quirks to be aware of
 
