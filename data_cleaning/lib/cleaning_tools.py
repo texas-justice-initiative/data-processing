@@ -138,7 +138,7 @@ def insert_col_after(df, to_insert, name, after):
     return df[newcols]
 
 
-def read_dtw_excel(project_key, filename):
+def read_dtw_excel(project_key, filename, select_sheet=None):
     '''Reads a dataframe from a raw Excel file on data.world (circumventing DTW's preprocessing).'''
     datasets = dw.load_dataset(project_key, force_update=True)
     data_bytes = datasets.raw_data[filename]
@@ -147,6 +147,8 @@ def read_dtw_excel(project_key, filename):
     os.write(new_file, data_bytes)
     os.close(new_file)
     xl = pd.ExcelFile(tmpfilename)
+    if select_sheet:
+        return xl.parse(select_sheet)
     sheet_names = xl.sheet_names
     if len(sheet_names) == 1:
         return xl.parse(sheet_names[0])
