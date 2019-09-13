@@ -1,4 +1,7 @@
 venv
+client_secret.json
+config.yaml
+.idea
 .ipynb_checkpoints/
 data/
 tmp/
