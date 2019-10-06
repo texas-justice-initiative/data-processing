@@ -69,10 +69,11 @@ class TJIEmailer():
             return """<html>
                    <head></head>
                    <body>
+                     <h1>{0}</h1>
                      <p>Error Message:
-                     <p>{}
+                     <p>{1}
                    </body>
-                   </html> """.format(exception)
+                   </html> """.format(subject, exception)
         else:
             return """<html>
                    <head></head>
