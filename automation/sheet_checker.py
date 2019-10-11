@@ -26,13 +26,13 @@ class SheetChecker(object):
 
     Author: Aiden Yang <aiden.yang@texasjusticeinitiative.org>
     """
-    
+
     def __init__(self, dataset, emailer, sheet_key, cleaning_nbs, compression_nbs, force, sync):
-        """ Constructor for Sheet Checker object. 
+        """ Constructor for Sheet Checker object.
 
         Args:
             dataset (string): Name of dataset
-            emailer (TJIEmailer): Emailer obj used for sending success and failures emails through SES 
+            emailer (TJIEmailer): Emailer obj used for sending success and failures emails through SES
             sheet_key (string): Google Sheets key
             cleaning_nbs ([] of strings): List of cleaning notebooks to run
             compression_nbs ([] of strings): List of compression notebooks to run
@@ -71,10 +71,10 @@ class SheetChecker(object):
         try:
             for cleaning_nb in self.cleaning_nbs:
                 self.run_notebook(cleaning_nb)
-            self.emailer.send_email(is_success=True, action="Cleaning", dataset=self.dataset)
+            self.emailer.send_email(action="Cleaning", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
-            self.emailer.send_email(is_success=False, action="Cleaning", dataset=self.dataset)
+            self.emailer.send_email(action="Cleaning", dataset=self.dataset, exception=e)
             self.logger.error('Cleaning failed.')
             sys.exit('Exiting: encountered an issue while cleaning.')
 
@@ -84,17 +84,17 @@ class SheetChecker(object):
         try:
             for compression_nb in self.compression_nbs:
                 self.run_notebook(compression_nb)
-            self.emailer.send_email(is_success=True, action="Compressing", dataset=self.dataset)
+            self.emailer.send_email(action="Compressing", dataset=self.dataset)
         except Exception as e:
             self.logger.exception(e)
             self.logger.error('Compressing failed.')
-            self.emailer.send_email(is_success=False, action="Compressing", dataset=self.dataset)
+            self.emailer.send_email(action="Compressing", dataset=self.dataset, exception=e)
             sys.exit('Exiting: encountered an issue while compressing.')
         self.logger.info("Successfully cleaned and compressed data.")
 
     def run_notebook(self, nb_name):
         """Runs a notebook and write out the output notebook
-        
+
         Args:
             nb_name (string): notebook filename
         """
@@ -114,7 +114,7 @@ class SheetChecker(object):
 
     def is_sheet_updated(self):
         """Checks if google sheet has been updated since the last time this job ran
-        
+
         Returns:
             boolean
         """
@@ -147,7 +147,7 @@ class SheetChecker(object):
 
     def fetch_last_run_ts(self):
         """Fetches last job run timestamp from s3
-        
+
         Returns:
             last_run_ts: Last time this job ran
         """
