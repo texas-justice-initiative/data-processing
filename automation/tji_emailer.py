@@ -5,6 +5,8 @@ import boto3
 from botocore.exceptions import ClientError
 
 import tji_utils
+from sys import exc_info
+import traceback
 
 CHARSET = "UTF-8"
 
@@ -66,14 +68,15 @@ class TJIEmailer():
 
     def get_body(subject, exception):
         if exception:
+            formatted_exception = TJIEmailer.format_exception(exception)
             return """<html>
                    <head></head>
                    <body>
                      <h1>{0}</h1>
-                     <p>Error Message:
-                     <p>{1}
+                     <p>Error:
+                     <pre>{1}</pre>
                    </body>
-                   </html> """.format(subject, exception)
+                   </html> """.format(subject, formatted_exception)
         else:
             return """<html>
                    <head></head>
@@ -85,3 +88,6 @@ class TJIEmailer():
     def get_subject(action, dataset, exception):
         indicator = "SUCCESS" if not exception else "FAILURE"
         return "{0} {1} {2}".format(action.capitalize(), dataset, indicator)
+
+    def format_exception(exception):
+        return ''.join(traceback.format_exception(*exc_info()))
