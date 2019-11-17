@@ -96,7 +96,7 @@ tornado==5.1.1
 traitlets==4.3.2
 unicodecsv==0.14.1
 uritemplate==3.0.0
-urllib3==1.24
+urllib3==1.24.2
 watermark==1.7.0
 wcwidth==0.1.7
 webencodings==0.5.1
