@@ -25,3 +25,7 @@ Nested keys:
 
 ## Usage
 python sheet_checker.py -config <*.yaml>
+
+## Deploying a Change
+
+The data processing scripts are checked out on the EC2 instance in the directory `/home/ec2-user/data-processing`. Deploying a change is a simple matter of connecting to the EC2 instance, cd'ing into the directory, and running `git pull` on the repository there. [Here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-methods.html) is the AWS documentation for connecting to an EC2 instance. The simplest method is the _Connect Using the Browser-based Client_ option.
