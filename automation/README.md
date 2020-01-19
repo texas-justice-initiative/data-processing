@@ -35,4 +35,4 @@ Deploying a change is a simple:
 
 [Here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-methods.html) is the AWS documentation for connecting to an EC2 instance. The simplest method is the _Connect Using the Browser-based Client_ option.
 
-*Only after pulling the changes into the EC2 instance does the data on the TJI website get updated.* 
+**Only after pulling the changes into the EC2 instance does the data on the TJI website get updated.** 
