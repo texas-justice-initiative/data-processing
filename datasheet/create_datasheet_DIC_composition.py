@@ -35,7 +35,6 @@ s_instances = '# Datasheet: Composition \n\n' \
 # Data summary for the markdown table
 suggest_data_type_dict = load_obj('DIC_suggest_data_type_dict.pkl')
 df_summary = pd.DataFrame(index=df.columns)
-df_summary['Description'] = 'TBD'
 df_summary['Data Types'] = df.dtypes
 df_summary['Suggested Data Types'] = suggest_data_type_dict.values()
 df_summary['No. Missing Values'] = df.isnull().sum()
