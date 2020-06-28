@@ -7,6 +7,7 @@ Datasets:
       - clean_cdr.ipynb
     compression notebooks:
       - create_datasets_for_website.ipynb
+      - transfer_clean_data.ipynb
     sheet key: <KEY>
   ois:
     enabled: true
