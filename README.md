@@ -9,7 +9,7 @@ To learn more about TJI, visit our website at www.texasjusticeinitiative.org
 Many different datasets and files are used by the TJI website and our analyses. All non-manual data processing steps live in this repo.
 
 All scripts/notebooks to clean, scrape, merge or otherwise process data files. There are two main folders:
-  * [data_scraping/](https://github.com/texas-justice-initiative/data-processing/tree/master/data_scraping) - reads data from anywhere on the internet and writes csvs to [TJI's data.world account](https://data.world/tji) 
+  * [data_scraping/](https://github.com/texas-justice-initiative/data-processing/tree/master/data_scraping) - reads data from anywhere on the internet and writes csvs to [TJI's data.world account](https://data.world/tji)
   * [data_cleaning/](https://github.com/texas-justice-initiative/data-processing/tree/master/data_cleaning) - files should both be READ FROM and WRITTEN TO the TJI data.world account. Any dataset not on data.world should be scraped or manually added to data.world first.
     * The output of a cleaning script should be a file whose name begins with `clean_`.
 
@@ -34,10 +34,14 @@ To regenerate data for the TJI website ([repo](https://github.com/texas-justice-
     * `shot_officers_compressed.json`
     * `shot_officers_full.csv`
   * Moves these files into the [data/](https://github.com/texas-justice-initiative/website/tree/master/data) folder of _website_ repo, and create a PR.
-  
+
 ## Automation
 
 Data cleaning and compression for OIS and CDR data are currently automated via a daily cronjob. See the [automation documentation](automation/README.md) for details.
+
+## Testing
+
+To do testing in this repo, please follow the instructions in the [instructions guide](https://docs.google.com/document/d/16RpQa0g8_39V_sGZ_5w0DwPuw-NJN0edjoqWiW8V3dA/edit?usp=sharing)
 
 
 ## TJI dataset details, means of creation, and data quirks to be aware of
@@ -116,5 +120,3 @@ Data cleaning and compression for OIS and CDR data are currently automated via a
 * **Description:** Crime by county in Texas from the [FBI's Uniform Crime Report](https://ucr.fbi.gov/)
 * **Generation pipeline:**
   1. Direct downloaded to data.world from the FBI website. The source pages are here for [2016](https://ucr.fbi.gov/crime-in-the-u.s/2016/crime-in-the-u.s.-2016/tables/table-8/table-8-state-cuts/texas.xls), [2015](https://ucr.fbi.gov/crime-in-the-u.s/2015/crime-in-the-u.s.-2015/tables/table-10/table-10-state-pieces/table_10_offenses_known_to_law_enforcement_texas_by_metropolitan_and_nonmetropolitan_counties_2015.xls), and [2014](https://ucr.fbi.gov/crime-in-the-u.s/2014/crime-in-the-u.s.-2014/tables/table-10/table-10-pieces/Table_10_Offenses_Known_to_Law_Enforcement_Texas_by_Metropolitan_and_Nonmetropolitan_Counties_2014.xls).
-
-
