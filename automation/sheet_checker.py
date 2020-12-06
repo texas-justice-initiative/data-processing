@@ -133,7 +133,7 @@ class SheetChecker(object):
             timestamp: Last update timestamp of google sheet
         """
         gc = pygsheets.authorize(service_file='client_secret.json')
-        gc.enableTeamDriveSupport = True
+        gc.drive.enable_team_drive('0ACeQWapAwOLqUk9PVA')
         sheet = gc.open_by_key(self.sheet_key)
         last_updated_ts = sheet.updated
         return last_updated_ts
