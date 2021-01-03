@@ -160,8 +160,8 @@ class SheetChecker(object):
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists('/Users/hlukas/git/_header/google_token.pickle'):
-            with open('/Users/hlukas/git/_header/google_token.pickle', 'rb') as token:
+        if os.path.exists('/home/ec2-user/test/data-processing/automation/google_token.pickle'):
+            with open('/home/ec2-user/test/data-processing/automation/google_token.pickle', 'rb') as token:
                 creds = pickle.load(token)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
@@ -169,10 +169,10 @@ class SheetChecker(object):
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    '/Users/hlukas/git/_header/google_v3_credentials.json', SCOPES)
+                    '/home/ec2-user/test/data-processing/automation/google_v3_credentials.json', SCOPES)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('/Users/hlukas/git/_header/google_token.pickle', 'wb') as token:
+            with open('/home/ec2-user/test/data-processing/automation/google_token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
 
         service = build('drive', 'v3', credentials=creds)
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     # Set up emailer obj
     email_config = config['Email Settings']
     emailer = TJIEmailer(sender=email_config['sender'],
-                         recipients=email_config['recipients'],o
+                         recipients=email_config['recipients'],
                          aws_region=email_config['region'])
 
     # Create and run sheet checker for one dataset
@@ -274,6 +274,7 @@ if __name__ == '__main__':
             sc = SheetChecker(dataset=dataset,
                               emailer=emailer,
                               sheet_key=settings['sheet key'],
+                              sheet_name = settings['sheet name'],
                               cleaning_nbs=settings['cleaning notebooks'],
                               compression_nbs=settings['compression notebooks'],
                               force=settings['force'],
