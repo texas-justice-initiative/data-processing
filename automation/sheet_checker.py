@@ -134,16 +134,16 @@ class SheetChecker(object):
             job_last_run_ts = job_last_run_ts.replace(tzinfo=pytz.UTC)
             return sheet_last_updated_ts >= job_last_run_ts
 
-    def get_sheet_update_ts(self):
-        """
-        Returns:
-            timestamp: Last update timestamp of google sheet
-        """
-        gc = pygsheets.authorize(service_file='client_secret.json')
-        gc.drive.enable_team_drive('0ACeQWapAwOLqUk9PVA')
-        sheet = gc.open_by_key(self.sheet_key)
-        last_updated_ts = sheet.updated
-        return last_updated_ts
+    # def get_sheet_update_ts(self):
+    #     """
+    #     Returns:
+    #         timestamp: Last update timestamp of google sheet
+    #     """
+    #     gc = pygsheets.authorize(service_file='client_secret.json')
+    #     gc.drive.enable_team_drive('0ACeQWapAwOLqUk9PVA')
+    #     sheet = gc.open_by_key(self.sheet_key)
+    #     last_updated_ts = sheet.updated
+    #     return last_updated_ts
 
     def get_sheet_update_ts(self):
         """
@@ -186,11 +186,11 @@ class SheetChecker(object):
         corpora = 'drive',
         supportsAllDrives = 'true',
         fields="nextPageToken, files(id, name, modifiedTime)",
-        q = "name = '{}'".format(sheet_name)).execute()
+        q = "name = '{}'".format(self.sheet_name)).execute()
         
         items = results.get('files', [])
         assert(len(items) == 1)
-        assert(items[0]['id'] == sheet_key)
+        assert(items[0]['id'] == self.sheet_key)
         return(items[0]['modifiedTime'])
 
     def update_last_ran_ts(self):
