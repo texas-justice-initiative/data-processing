@@ -1,5 +1,12 @@
 """Summary
 """
+from __future__ import print_function
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
 import argparse
 import os
 import sys
@@ -16,13 +23,6 @@ from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 
 import tji_utils
 from tji_emailer import TJIEmailer
-
-from __future__ import print_function
-import pickle
-import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 
 class SheetChecker(object):
 
