@@ -33,7 +33,7 @@ class SheetChecker(object):
     Author: Aiden Yang <aiden.yang@texasjusticeinitiative.org>
     """
 
-    def __init__(self, dataset, emailer, sheet_key, cleaning_nbs, compression_nbs, force, sync):
+    def __init__(self, dataset, emailer, sheet_key, sheet_name, cleaning_nbs, compression_nbs, force, sync):
         """ Constructor for Sheet Checker object.
 
         Args:
