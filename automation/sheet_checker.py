@@ -17,6 +17,12 @@ from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import tji_utils
 from tji_emailer import TJIEmailer
 
+from __future__ import print_function
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 
 class SheetChecker(object):
 
@@ -45,6 +51,7 @@ class SheetChecker(object):
         self.sync_dw = sync
         self.dataset = dataset
         self.sheet_key = sheet_key
+        self.sheet_name = sheet_name
         self.cleaning_nbs = cleaning_nbs
         self.compression_nbs = compression_nbs
 
@@ -138,6 +145,54 @@ class SheetChecker(object):
         last_updated_ts = sheet.updated
         return last_updated_ts
 
+    def get_sheet_update_ts(self):
+        """
+        Returns:
+        timestamp: Last update timestamp of google sheet
+        """
+        # If modifying these scopes, delete the file token.pickle.
+        SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
+
+        """Shows basic usage of the Drive v3 API.
+        Prints the names and ids of the first 10 files the user has access to.
+        """
+        creds = None
+        # The file token.pickle stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        if os.path.exists('/Users/hlukas/git/_header/google_token.pickle'):
+            with open('/Users/hlukas/git/_header/google_token.pickle', 'rb') as token:
+                creds = pickle.load(token)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    '/Users/hlukas/git/_header/google_v3_credentials.json', SCOPES)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open('/Users/hlukas/git/_header/google_token.pickle', 'wb') as token:
+                pickle.dump(creds, token)
+
+        service = build('drive', 'v3', credentials=creds)
+
+        # search for timestamp by name
+
+        results = service.files().list(
+        pageSize=10, 
+        driveId = '0ACeQWapAwOLqUk9PVA', 
+        includeItemsFromAllDrives = 'true', 
+        corpora = 'drive',
+        supportsAllDrives = 'true',
+        fields="nextPageToken, files(id, name, modifiedTime)",
+        q = "name = '{}'".format(sheet_name)).execute()
+        
+        items = results.get('files', [])
+        assert(len(items) == 1)
+        assert(items[0]['id'] == sheet_key)
+        return(items[0]['modifiedTime'])
+
     def update_last_ran_ts(self):
         """Drops current time as timestamp in s3, to be used next time this job runs
         """
@@ -210,7 +265,7 @@ if __name__ == '__main__':
     # Set up emailer obj
     email_config = config['Email Settings']
     emailer = TJIEmailer(sender=email_config['sender'],
-                         recipients=email_config['recipients'],
+                         recipients=email_config['recipients'],o
                          aws_region=email_config['region'])
 
     # Create and run sheet checker for one dataset
