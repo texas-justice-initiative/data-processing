@@ -3,7 +3,7 @@ P.O. Box 164286
 Austin, TX 78716   
 https://www.texasjusticeinitiative.org  
 
-![](https://raw.githubusercontent.com/texas-justice-initiative/website-nextjs/master/images/tji-logo.svg) 
+<img src="https://raw.githubusercontent.com/texas-justice-initiative/website-nextjs/master/images/tji-logo.svg" alt="TJI logo" style="max-width:200px;">
 
 # Data Access License Terms
 
