@@ -10,4 +10,4 @@ pandas >= 0.20
 requests >= 2.11
 watermark >= 1.5.0
 # For styling dataframes printed in notebooks
-Jinja2 == 2.10
+Jinja2 == 2.11.3
